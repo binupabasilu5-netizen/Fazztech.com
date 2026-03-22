@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAZZ Technology - Pro Invoice</title>
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="auth-wrapper">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="auth-box">
+            <h2 style="text-align: center; margin-bottom: 20px;"><i data-feather="lock" style="width:28px; height:28px;"></i> System Login</h2>
+            <div class="form-section">
+                <label>Username</label>
+                <input type="text" id="loginUser" placeholder="Enter Username">
+            </div>
+            <div class="form-section">
+                <label>Password</label>
+                <input type="password" id="loginPass" placeholder="Enter Password">
+            </div>
+            <p id="loginError" class="error-msg"></p>
+            <button class="btn btn-print" onclick="attemptLogin()" style="margin-top: 15px;">
+                <i data-feather="log-in"></i> Login
+            </button>
+            <p class="help-text" style="color: #94a3b8; font-size: 10px; margin-top: 15px;">Default: admin / admin123</p>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app-wrapper" id="mainApp" style="display: none;">
+        <!-- Sidebar -->
+        <div class="sidebar no-print">
+            
+            <!-- Top Right Profile/Settings Pattern -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0;"><i data-feather="box" style="width:24px; height:24px;"></i> Pro Invoice</h2>
+                
+                <div class="dropdown">
+                    <button class="profile-btn" id="mainProfileBtn">
+                        <div class="avatar-circle">
+                            <i data-feather="user" style="width:16px; color:#fff;"></i>
+                        </div>
+                    </button>
+                    <div id="settingsMenu" class="dropdown-content">
+                        <div class="dropdown-header">
+                            <strong id="loggedUserName">Admin User</strong>
+                            <span id="loggedUserEmail" style="display:block; font-size:9px; color:var(--text-muted);">admin@fazztech.lk</span>
+                        </div>
+                        <hr style="margin: 5px 0;">
+                        <a href="#" onclick="openProfileModal(); toggleMenu(event);"><i data-feather="settings" style="width:14px;"></i> Profile Settings</a>
+                        <a href="#" onclick="logout()"><i data-feather="log-out" style="width:14px; color:var(--danger)"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <label>Invoice Number</label>
+                <input type="text" id="invNo" value="INV-000001">
+            </div>
+
+            <div class="form-section">
+                <label style="display: flex; justify-content: space-between;">
+                    Customer Name 
+                    <a href="#" onclick="openHistoryModal()" style="color: var(--primary); font-size: 10px; text-decoration: none;">View History</a>
+                </label>
+                <input type="text" id="custName" list="customerList" placeholder="Search or type name..." autocomplete="off">
+                <datalist id="customerList"></datalist>
+            </div>
+            <div class="form-section">
+                <label>Customer Address</label>
+                <textarea id="custAddr" rows="2" placeholder="Address..."></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-section half">
+                    <label>Date</label>
+                    <input type="text" id="invDate" value="">
+                </div>
+                <div class="form-section half">
+                    <label>Payment Type</label>
+                    <input type="text" id="invType" value="Credit" list="paymentTypes">
+                    <datalist id="paymentTypes">
+                        <option value="Cash">
+                        <option value="Credit">
+                        <option value="Bank Transfer">
+                    </datalist>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-section half">
+                    <label>PO No.</label>
+                    <input type="text" id="invPo" value="">
+                </div>
+                <div class="form-section half">
+                    <label>Paid Amount (LKR)</label>
+                    <input type="number" id="paidAmount" value="0.00" step="0.01">
+                </div>
+            </div>
+
+            <hr>
+            <h3><i data-feather="shopping-cart" style="width:16px; height:16px; margin-right:5px; position:relative; top:2px;"></i> Invoice Items</h3>
+            <div id="itemsList"></div>
+            <button class="btn btn-add" onclick="addItem()">
+                <i data-feather="plus-circle" style="width:18px;"></i> Add Item
+            </button>
+
+            <hr>
+            <div class="form-row" style="margin-bottom: 20px;">
+                <button class="btn btn-save half" onclick="saveGenerateNew()" style="margin-bottom: 0;">
+                    <i data-feather="save" style="width:18px;"></i> Save & New
+                </button>
+                <button class="btn btn-print half" onclick="printInvoice()" style="margin-bottom: 0;">
+                    <i data-feather="printer" style="width:18px;"></i> Print A5
+                </button>
+            </div>
+            <p class="help-text">Set paper size to <strong>A5 Landscape</strong> & enable <strong>Background Graphics</strong></p>
+        </div>
+
+        <!-- Main Preview Area -->
+        <div class="preview-area">
+            <div class="blob blob-1"></div>
+            <div class="blob blob-2"></div>
+            <div class="preview-zoom-wrapper" id="previewWrapper">
+                <div class="invoice-page" id="invoice">
+                    
+                    <!-- DYNAMIC INVOICE HEADER -->
+                    <div class="header">
+                        <div class="logo" id="renderLogoContainer">
+                            <!-- SVG DEFAULT LOGO -->
+                            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="max-height: 80px; width: auto; display: block;">
+                                <defs>
+                                    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0ea3e6"/><stop offset="100%" stop-color="#0456a9"/></linearGradient>
+                                    <linearGradient id="greyGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#555555"/><stop offset="100%" stop-color="#cdcdcd"/></linearGradient>
+                                    <linearGradient id="baseGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#0fa4eb"/><stop offset="100%" stop-color="#064f9b"/></linearGradient>
+                                    <clipPath id="screenClip"><path d="M 40,115 L 40,50 Q 40,30 60,30 L 140,30 Q 160,30 160,50 L 160,115 Z" /></clipPath>
+                                </defs>
+                                <g clip-path="url(#screenClip)">
+                                    <rect x="0" y="0" width="200" height="200" fill="url(#blueGrad)" />
+                                    <path d="M 70,115 C 110,80 140,50 170,10 L 200,10 L 200,150 L 70,150 Z" fill="url(#greyGrad)" />
+                                    <path d="M 10,130 C 90,100 130,60 180,-5 L 200,5 C 145,70 105,110 30,140 Z" fill="#ffffff" />
+                                </g>
+                                <polygon points="10,165 40,118 160,118 190,165" fill="url(#baseGrad)"/>
+                                <polygon points="73,165 83,145 117,145 127,165" fill="#ffffff"/>
+                                <rect x="10" y="170" width="180" height="12" fill="url(#baseGrad)"/>
+                            </svg>
+                        </div>
+                        <div class="company-details">
+                            <h1 id="renderCompanyName">FAZZ TECHNOLOGY (PVT) LTD</h1>
+                            <p class="subtitle" id="renderCompanyDesc">(Dealers in All kind of Laptop & Desktop Accessories)</p>
+                            <p class="address" id="renderCompanyAddr">No.39/1/11, Fortune Arcade,, Galle Road,Colombo 04</p>
+                            <p class="contact"><b id="renderCompanyContact">Tel: 0777 960 600 | 0773 270 433 | web: www.fazztech.lk email: info@fazztech.lk</b></p>
+                        </div>
+                        <div class="invoice-title">
+                            <h2>INVOICE</h2>
+                            <h3 id="displayInvNo">INV-000001</h3>
+                        </div>
+                    </div>
+
+                    <div class="info-bar">
+                        <div class="customer-info">
+                            <div class="info-row">
+                                <span class="lbl">Customer Details :</span>
+                                <span class="val" id="displayCustName"></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="lbl"></span>
+                                <span class="val" id="displayCustAddr"></span>
+                            </div>
+                        </div>
+                        <div class="meta-info">
+                            <div class="meta-row">
+                                <span class="lbl-m">Date</span><span>:</span><span class="val-m" id="displayDate"></span>
+                            </div>
+                            <div class="meta-row">
+                                <span class="lbl-m">Payment Type</span><span>:</span><span class="val-m" id="displayType">Credit</span>
+                            </div>
+                            <div class="meta-row">
+                                <span class="lbl-m">PO No.</span><span>:</span><span class="val-m" id="displayPo"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%; text-align: center;">S.N.</th>
+                                    <th style="width: 45%;">Description of Goods</th>
+                                    <th style="width: 10%; text-align: center;">(W) Months</th>
+                                    <th style="width: 10%; text-align: center;">Qty.</th>
+                                    <th style="width: 12%; text-align: right;">Price</th>
+                                    <th style="width: 18%; text-align: right;">Amount(LKR)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="displayItems" class="min-h-tbody"></tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" style="text-align: right; border: none; font-weight: bold; padding-right: 15px;">Grand Total</td>
+                                    <td style="text-align: center; border: none; border-bottom: 1px solid #000; font-weight: bold;" id="totalQty">0 Pcs.</td>
+                                    <td style="border: none;"></td>
+                                    <td style="text-align: right; border: 1px solid #000; font-weight: bold; font-size: 12px;" id="totalAmount">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" style="border: none;"></td>
+                                    <td colspan="2" style="text-align: right; border: none; padding-right: 10px;">Paid Amount</td>
+                                    <td style="text-align: right; border: 1px solid #000;" id="totalPaid">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" style="border: none;"></td>
+                                    <td colspan="2" style="text-align: right; border: none; padding-right: 10px;">Outstanding Balance</td>
+                                    <td style="text-align: right; border: 1px solid #000; font-weight: bold; font-size: 12px;" id="totalBalance">0.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div class="footer">
+                        <div class="warranty-section">
+                            <h4>Warranty Claims</h4>
+                            <p>Warranty covers only manufacturer defects. Damages or defects due to other causes such as negligence,misuse, improper operation, fluctuation, lightening or other natural disaster, sabotage or accident ect, are not included under this warranty.</p>
+                            <p class="bold-text" id="renderCompanyFooter">All cheques should be drawn in favour of "FAZZ TECHNOLOGY (PVT) LTD"</p>
+                            <p class="bold-text">GOODS RECEIVED IN GOOD CONDITION</p>
+                        </div>
+                        <div class="signatures">
+                            <div class="sig-box"><div class="line">.....................................</div><div class="role">Prepared By</div></div>
+                            <div class="sig-box"><div class="line">.....................................</div><div class="role">Authorised By</div></div>
+                            <div class="sig-box"><div class="line">.....................................</div><div class="role">Received By</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN PROFILE SETTINGS MODAL -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content" style="max-width: 650px; width: 95%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--input-border); padding-bottom: 15px;">
+                <h3 style="margin: 0; font-size: 20px;"><i data-feather="settings" style="width:20px; vertical-align: middle;"></i> System Profile Settings</h3>
+                <button class="icon-btn" onclick="closeModal('profileModal')"><i data-feather="x"></i></button>
+            </div>
+
+            <div class="settings-grid">
+                <!-- Left Column: User & Security -->
+                <div class="settings-col">
+                    <h4 class="settings-group-title"><i data-feather="user"></i> Account Info</h4>
+
+                    <!-- Personal Profile Picture Upload -->
+                    <div class="form-section flex-row-align" style="margin-bottom: 20px;">
+                        <div class="upload-avatar" id="userAvatarPreviewBox" style="border-radius: 50%;" onclick="document.getElementById('profUserAvatarUpload').click()">
+                            <span><i data-feather="camera"></i></span>
+                            <img id="userAvatarPreviewImg" style="display:none; border-radius: 50%;">
+                        </div>
+                        <div style="flex: 1; padding-left: 15px;">
+                            <label>Profile Photo</label>
+                            <input type="file" id="profUserAvatarUpload" accept="image/*" style="display: none;" onchange="handleUserAvatarUpload(event)">
+                            <button class="btn btn-add" style="padding: 6px 12px; font-size: 11px; width: auto; display: inline-block;" onclick="document.getElementById('profUserAvatarUpload').click()">Upload</button>
+                            <button class="btn btn-print" style="padding: 6px 12px; font-size: 11px; width: auto; background: var(--danger); display: inline-block; margin-left: 5px;" onclick="removeUserAvatar()">Clear</button>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <label>Display Name</label>
+                        <input type="text" id="profName" placeholder="Admin User">
+                    </div>
+                    <div class="form-section">
+                        <label>Email Address</label>
+                        <input type="email" id="profEmail" placeholder="admin@domain.com">
+                    </div>
+                    <div class="form-section">
+                        <label>Phone Number</label>
+                        <input type="text" id="profPhone" placeholder="+94 77 123 4567">
+                    </div>
+
+                    <h4 class="settings-group-title" style="margin-top:25px;"><i data-feather="lock"></i> Change Password</h4>
+                    <div class="form-section">
+                        <label>Current Password <span style="font-weight:normal; font-size:9px;">(Required only to change password)</span></label>
+                        <input type="password" id="profCurPwd" placeholder="Leave blank if no change">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-section half">
+                            <label>New Password</label>
+                            <input type="password" id="profNewPwd">
+                        </div>
+                        <div class="form-section half">
+                            <label>Confirm Password</label>
+                            <input type="password" id="profConPwd">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Company Details -->
+                <div class="settings-col">
+                    <h4 class="settings-group-title"><i data-feather="briefcase"></i> Company Invoice Details</h4>
+                    
+                    <div class="form-section flex-row-align">
+                        <div class="upload-avatar" id="avatarPreviewBox" onclick="document.getElementById('profLogoUpload').click()">
+                            <span><i data-feather="camera"></i><br>Logo</span>
+                            <img id="avatarPreviewImg" style="display:none;">
+                        </div>
+                        <div style="flex: 1; padding-left: 15px;">
+                            <label>Company Logo</label>
+                            <p style="font-size: 10px; color: var(--text-muted); margin-bottom: 5px;">Upload a square or rectangular logo for the invoice header. Format: PNG/JPG.</p>
+                            <input type="file" id="profLogoUpload" accept="image/*" style="display: none;" onchange="handleLogoUpload(event)">
+                            <button class="btn btn-add" style="padding: 6px 12px; font-size: 11px; width: auto;" onclick="document.getElementById('profLogoUpload').click()">Choose File</button>
+                            <button class="btn btn-print" style="padding: 6px 12px; font-size: 11px; width: auto; background: var(--danger); margin-left: 5px;" onclick="removeLogo()">Remove</button>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <label>Company Name</label>
+                        <input type="text" id="profCompName" placeholder="FAZZ TECHNOLOGY (PVT) LTD">
+                    </div>
+                    <div class="form-section">
+                        <label>Subtitle / Tagline</label>
+                        <input type="text" id="profCompSub" placeholder="(Dealers in...)">
+                    </div>
+                    <div class="form-section">
+                        <label>Address</label>
+                        <input type="text" id="profCompAddr" placeholder="No.39/1/11, Fortune Arcade...">
+                    </div>
+                    <div class="form-section">
+                        <label>Contact Details String</label>
+                        <textarea id="profCompContact" rows="2" placeholder="Tel: 0777... | email: ..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <p id="profError" class="error-msg" style="text-align: left; font-size: 12px; margin: 15px 0;"></p>
+
+            <div class="form-row" style="margin-top: 20px; justify-content: flex-end; border-top: 1px solid var(--input-border); padding-top: 20px;">
+                <button class="btn" style="background: var(--input-bg); color: #fff; width: 120px;" onclick="closeModal('profileModal')">Cancel</button>
+                <button class="btn btn-print" style="width: 150px;" onclick="saveProfile()"><i data-feather="check"></i> Save Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer History Modal -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content" style="max-width: 600px; width: 90%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0;">Customer History</h3>
+                <button class="icon-btn" onclick="closeModal('historyModal')"><i data-feather="x"></i></button>
+            </div>
+            <div style="max-height: 400px; overflow-y: auto;">
+                <table class="history-table" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--input-border); text-align: left; color: var(--text-muted); font-size: 11px;">
+                            <th style="padding: 10px;">Name</th>
+                            <th style="padding: 10px;">Address</th>
+                            <th style="padding: 10px; width: 80px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>feather.replace();</script>
+</body>
+</html>
