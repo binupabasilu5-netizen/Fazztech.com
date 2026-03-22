@@ -241,8 +241,15 @@ h3 { font-size: 15px; font-weight: 600; color: #e2e8f0; margin-bottom: 15px; }
 
 .invoice-page {
     width: 210mm; height: 148mm; background: #fff; color: #000; font-family: 'Arimo', Arial, sans-serif;
-    font-size: 11px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); padding: 12px 20px; position: relative;
+    font-size: 11px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); padding: 5mm; position: relative;
     box-sizing: border-box; z-index: 1; display: flex; flex-direction: column; overflow: hidden;
+}
+
+.invoice-inner-border {
+    border: 1px solid #000;
+    padding: 5mm 8mm;
+    display: flex; flex-direction: column;
+    height: 100%; box-sizing: border-box;
 }
 
 .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; margin-bottom: 8px; }
@@ -301,6 +308,6 @@ h3 { font-size: 15px; font-weight: 600; color: #e2e8f0; margin-bottom: 15px; }
     .invoice-page, .invoice-page * { visibility: visible; }
     .invoice-page {
         position: absolute; left: 0; top: 0; width: 210mm; height: 148mm;
-        padding: 10mm; box-shadow: none; margin: 0; transform: none; page-break-after: avoid; animation: none;
+        padding: 6mm; box-shadow: none; margin: 0; transform: none; page-break-after: avoid; animation: none;
     }
 }
